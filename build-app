@@ -1,0 +1,36 @@
+#!/bin/bash
+pushd `dirname $0` >/dev/null
+
+APP=/Applications/Minecraft.app
+
+if [ ! -e resources/Minecraft.jar ]; then
+    echo "downloading Minecraft.jar"
+    curl https://s3.amazonaws.com/Minecraft.Download/launcher/Minecraft.jar -o resources/Minecraft.jar
+fi
+if [ ! -e resources/Minecraft.jar ]; then
+    echo "failed to download Minecraft.jar"
+    exit
+fi
+
+if [ -e "$APP" ]; then
+    echo "deleting $APP"
+    rm -rf "$APP"
+fi
+
+echo "creating $APP"
+mkdir -p "$APP/Contents/MacOS"
+mkdir -p "$APP/Contents/Resources"
+cp resources/minecraft.sh "$APP/Contents/MacOS"
+cp resources/Minecraft.jar "$APP/Contents/Resources"
+cp resources/Info.plist "$APP/Contents"
+cp resources/PkgInfo "$APP/Contents"
+cp resources/Minecraft.icns "$APP/Contents/Resources"
+cp -a resources/jre "$APP/Contents/Resources"
+setfile -a B "$APP"
+
+find "$APP" -name .DS_Store -exec rm -f {} \;
+
+echo "signing $APP"
+codesign -f -s - "$APP"
+
+echo "$APP created"
